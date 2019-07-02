@@ -20,6 +20,7 @@ import Lambdabot.Plugin.Haskell.Pl.Optimize        (optimize)
 
 import Data.IORef
 import System.Timeout
+import GHC.IO (unsafeUnmask)
 
 -- firstTimeout is the timeout when the expression is simplified for the first
 -- time. After each unsuccessful attempt, this number is doubled until it hits
@@ -82,7 +83,7 @@ optimizeTopLevel (to, d) = do
 optimizeIO :: Int -> Expr -> IO (Expr, Bool)
 optimizeIO to e = do
   best <- newIORef e
-  result <- timeout to (mapM_ (writeIORef best $!) $ optimize e)
+  result <- timeout to (unsafeUnmask $ mapM_ (writeIORef best $!) $ optimize e)
   e' <- readIORef best
   return $ case result of
     Nothing -> (e', False)
